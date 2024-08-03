@@ -11,7 +11,7 @@
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.p2p import MAGIC_BYTES
+from test_framework.messages import MAGIC_BYTES
 from test_framework.util import assert_equal
 
 
@@ -38,7 +38,7 @@ class ReindexTest(BitcoinTestFramework):
         # In this test environment, blocks will always be in order (since
         # we're generating them rather than getting them from peers), so to
         # test out-of-order handling, swap blocks 1 and 2 on disk.
-        blk0 = self.nodes[0].chain_path / "blocks" / "blk00000.dat"
+        blk0 = self.nodes[0].blocks_path / "blk00000.dat"
         with open(blk0, 'r+b') as bf:
             # Read at least the first few blocks (including genesis)
             b = bf.read(2000)
@@ -73,6 +73,25 @@ class ReindexTest(BitcoinTestFramework):
         # All blocks should be accepted and processed.
         assert_equal(self.nodes[0].getblockcount(), 12)
 
+    def continue_reindex_after_shutdown(self):
+        node = self.nodes[0]
+        self.generate(node, 1500)
+
+        # Restart node with reindex and stop reindex as soon as it starts reindexing
+        self.log.info("Restarting node while reindexing..")
+        node.stop_node()
+        with node.busy_wait_for_debug_log([b'initload thread start']):
+            node.start(['-blockfilterindex', '-reindex'])
+            node.wait_for_rpc_connection(wait_for_import=False)
+        node.stop_node()
+
+        # Start node without the reindex flag and verify it does not wipe the indexes data again
+        db_path = node.chain_path / 'indexes' / 'blockfilter' / 'basic' / 'db'
+        with node.assert_debug_log(expected_msgs=[f'Opening LevelDB in {db_path}'], unexpected_msgs=[f'Wiping LevelDB in {db_path}']):
+            node.start(['-blockfilterindex'])
+            node.wait_for_rpc_connection(wait_for_import=False)
+        node.stop_node()
+
     def run_test(self):
         self.reindex(False)
         self.reindex(True)
@@ -80,7 +99,8 @@ class ReindexTest(BitcoinTestFramework):
         self.reindex(True)
 
         self.out_of_order()
+        self.continue_reindex_after_shutdown()
 
 
 if __name__ == '__main__':
-    ReindexTest().main()
+    ReindexTest(__file__).main()

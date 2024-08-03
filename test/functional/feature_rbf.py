@@ -28,7 +28,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             [
-                "-maxorphantx=1000",
                 "-limitancestorcount=50",
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
@@ -728,4 +727,4 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert conflicting_tx['txid'] in self.nodes[0].getrawmempool()
 
 if __name__ == '__main__':
-    ReplaceByFeeTest().main()
+    ReplaceByFeeTest(__file__).main()

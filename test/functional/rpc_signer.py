@@ -21,7 +21,7 @@ class RPCSignerTest(BitcoinTestFramework):
     def mock_signer_path(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'signer.py')
         if platform.system() == "Windows":
-            return "py " + path
+            return "py -3 " + path
         else:
             return path
 
@@ -77,4 +77,4 @@ class RPCSignerTest(BitcoinTestFramework):
         assert_equal({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'], True)
 
 if __name__ == '__main__':
-    RPCSignerTest().main()
+    RPCSignerTest(__file__).main()

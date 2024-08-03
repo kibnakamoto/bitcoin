@@ -8,7 +8,7 @@
 #include <key_io.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
@@ -128,6 +128,20 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(solutions[0] == std::vector<unsigned char>{16});
     BOOST_CHECK(solutions[1] == ToByteVector(uint256::ONE));
 
+    // TxoutType::ANCHOR
+    std::vector<unsigned char> anchor_bytes{0x4e, 0x73};
+    s.clear();
+    s << OP_1 << anchor_bytes;
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::ANCHOR);
+    BOOST_CHECK(solutions.empty());
+
+    // Sanity-check IsPayToAnchor
+    int version{-1};
+    std::vector<unsigned char> witness_program;
+    BOOST_CHECK(s.IsPayToAnchor());
+    BOOST_CHECK(s.IsWitnessProgram(version, witness_program));
+    BOOST_CHECK(CScript::IsPayToAnchor(version, witness_program));
+
     // TxoutType::NONSTANDARD
     s.clear();
     s << OP_9 << OP_ADD << OP_11 << OP_EQUAL;
@@ -136,10 +150,8 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
 
 BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
 {
-    CKey key;
-    CPubKey pubkey;
-    key.MakeNewKey(true);
-    pubkey = key.GetPubKey();
+    CKey key = GenerateRandomKey();
+    CPubKey pubkey = key.GetPubKey();
 
     CScript s;
     std::vector<std::vector<unsigned char> > solutions;
@@ -188,14 +200,24 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     s.clear();
     s << OP_0 << std::vector<unsigned char>(19, 0x01);
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
+
+    // TxoutType::ANCHOR but wrong witness version
+    s.clear();
+    s << OP_2 << std::vector<unsigned char>{0x4e, 0x73};
+    BOOST_CHECK(!s.IsPayToAnchor());
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
+
+    // TxoutType::ANCHOR but wrong 2-byte data push
+    s.clear();
+    s << OP_1 << std::vector<unsigned char>{0xff, 0xff};
+    BOOST_CHECK(!s.IsPayToAnchor());
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
 {
-    CKey key;
-    CPubKey pubkey;
-    key.MakeNewKey(true);
-    pubkey = key.GetPubKey();
+    CKey key = GenerateRandomKey();
+    CPubKey pubkey = key.GetPubKey();
 
     CScript s;
     CTxDestination address;
@@ -203,8 +225,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     // TxoutType::PUBKEY
     s.clear();
     s << ToByteVector(pubkey) << OP_CHECKSIG;
-    BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get<PKHash>(address) == PKHash(pubkey));
+    BOOST_CHECK(!ExtractDestination(s, address));
+    BOOST_CHECK(std::get<PubKeyDestination>(address) == PubKeyDestination(pubkey));
 
     // TxoutType::PUBKEYHASH
     s.clear();
@@ -249,10 +271,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s.clear();
     s << OP_1 << ToByteVector(pubkey);
     BOOST_CHECK(ExtractDestination(s, address));
-    WitnessUnknown unk;
-    unk.length = 33;
-    unk.version = 1;
-    std::copy(pubkey.begin(), pubkey.end(), unk.program);
+    WitnessUnknown unk{1, ToByteVector(pubkey)};
     BOOST_CHECK(std::get<WitnessUnknown>(address) == unk);
 }
 
@@ -394,7 +413,7 @@ BOOST_AUTO_TEST_CASE(bip341_spk_test_vectors)
     using control_set = decltype(TaprootSpendData::scripts)::mapped_type;
 
     UniValue tests;
-    tests.read((const char*)json_tests::bip341_wallet_vectors, sizeof(json_tests::bip341_wallet_vectors));
+    tests.read(json_tests::bip341_wallet_vectors);
 
     const auto& vectors = tests["scriptPubKey"];
 

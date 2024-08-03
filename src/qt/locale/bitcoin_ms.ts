@@ -27,11 +27,11 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Padam alamat semasa yang dipilih dari senaraiyang dipilih dari senarai</translation>
+        <translation type="unfinished">Padam alamat semasa yang dipilih dari senarai yang tersedia</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Masukkan alamat atau label untuk carian
+        <translation type="unfinished">Masukkan alamat atau label untuk memulakan pencarian
 </translation>
     </message>
     <message>
@@ -60,14 +60,6 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">&amp;Pilih</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">alamat-alamat penghantaran</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">alamat-alamat penerimaan</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Ini adalah alamat Bitcoin anda untuk pembayaran. Periksa jumlah dan alamat penerima sebelum membuat penghantaran koin sentiasa.</translation>
     </message>
@@ -87,6 +79,10 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">Terdapat ralat semasa cubaan menyimpan senarai alamat kepada %1. Sila cuba lagi.</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Alamat Terima - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -231,13 +227,6 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Baca Selesai</translation>
     </message>
     </context>
 <context>
@@ -576,6 +565,13 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">
 Alihkan fail data ke dalam tab semasa</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Baca Selesai</translation>
     </message>
     </context>
 </TS>
